@@ -28,6 +28,18 @@
             margin-right: 10px;
         }
 
+        button.default {
+            background-color: #4CAF50;
+            /* Màu xanh */
+        }
+
+        button.active {
+            background-color: red;
+            /* Màu đỏ */
+        }
+
+
+
         .hidden {
             display: none;
         }
@@ -114,22 +126,51 @@
     </div>
 
     <script>
-        // Hàm ẩn/hiện một phần tử
+        //Hàm ẩn hiện một phần tử
+        // function toggleSection(sectionId) {
+        //     const section = document.getElementById(sectionId);
+        //     if (section.classList.contains('hidden')) {
+        //         section.classList.remove('hidden');
+        //         if (sectionId === "attendanceSection") {
+        //             // clickedButton.classList.add('active');
+        //             loadAttendanceHistory();
+        //         }
+
+        //         if (sectionId === "accessSection") {
+        //             //clickedButton.classList.add('active');
+        //             loadAccessHistory();
+        //         }
+        //     } else {
+        //         section.classList.add('hidden');
+        //     }
+        // }
+        // Hàm ẩn/hiện một phần tử và thay đổi màu nút bấm
         function toggleSection(sectionId) {
             const section = document.getElementById(sectionId);
+            const button = document.querySelector(`button[onclick="toggleSection('${sectionId}')"]`);
+
             if (section.classList.contains('hidden')) {
                 section.classList.remove('hidden');
+                button.classList.add('active');  // Chuyển nút sang màu đỏ
+                button.classList.remove('default');  // Xóa màu xanh mặc định
                 if (sectionId === "attendanceSection") {
+
                     loadAttendanceHistory();
                 }
-
                 if (sectionId === "accessSection") {
+
                     loadAccessHistory();
                 }
+
+
             } else {
                 section.classList.add('hidden');
+                button.classList.remove('active');  // Chuyển nút về màu xanh
+                button.classList.add('default');  // Thêm màu xanh mặc định
             }
+
         }
+
 
         // Hàm tải danh sách sinh viên
         function loadStudents() {
