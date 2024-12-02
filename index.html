@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Sinh viên và Điểm danh</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .button-container {
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            margin-right: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        #attendanceHistory {
+            margin-top: 20px;
+        }
+
+        .attendance-record {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Quản lý Sinh viên và Điểm danh</h1>
+
+    <div class="button-container">
+        <button onclick="toggleSection('studentsSection')">Danh sách sinh viên</button>
+        <button onclick="toggleSection('attendanceSection')">Lịch sử điểm danh</button>
+        <button onclick="toggleSection('accessSection')">Lịch sử truy cập</button>
+    </div>
+
+    <!-- Phần Danh sách sinh viên -->
+    <div id="studentsSection" class="hidden">
+        <h2>Thêm sinh viên</h2>
+        <form id="addStudentForm">
+            <input type="text" id="mssv" placeholder="MSSV" required>
+            <input type="text" id="name" placeholder="Tên sinh viên" required>
+            <input type="text" id="mac_address" placeholder="Địa chỉ MAC" required>
+            <button type="submit">Thêm sinh viên</button>
+        </form>
+
+        <h2>Danh sách sinh viên</h2>
+        <table id="studentsTable">
+            <thead>
+                <tr>
+                    <th>MSSV</th>
+                    <th>Tên</th>
+                    <th>Địa chỉ MAC</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dữ liệu sẽ được tải từ API -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Phần Lịch sử điểm danh -->
+    <div id="attendanceSection" class="hidden">
+        <h2>Lịch sử điểm danh</h2>
+        <input type="date" id="attendanceDate" onchange="loadAttendanceHistory()">
+        <div id="attendanceHistory">
+            <h3>Lịch sử điểm danh:</h3>
+            <div id="attendanceData"></div>
+        </div>
+    </div>
+
+    <div id="accessSection" class="hidden">
+        <h2>Lịch sử truy cập</h2>
+        <input type="date" id="accessDate" onchange="loadAccessHistory()">
+        <div id="accessHistory">
+            <h3>Lịch sử truy cập:</h3>
+            <div id="accessData"></div>
+        </div>
+    </div>
+
+    <script>
+        // Hàm ẩn/hiện một phần tử
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                if (sectionId === "attendanceSection") {
+                    loadAttendanceHistory();
+                }
+
+                if (sectionId === "accessSection") {
+                    loadAccessHistory();
+                }
+            } else {
+                section.classList.add('hidden');
+            }
+        }
+
+        // Hàm tải danh sách sinh viên
+        function loadStudents() {
+            fetch('http://localhost:3000/students')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector('#studentsTable tbody');
+                    tableBody.innerHTML = ''; // Xóa dữ liệu cũ
+                    data.forEach(student => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${student.mssv}</td>
+                            <td>${student.name}</td>
+                            <td>${student.mac_address}</td>
+                            <td>
+                                <button onclick="deleteStudent('${student.mssv}')">Xóa</button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Lỗi khi tải danh sách sinh viên:', error));
+        }
+
+        // Hàm thêm sinh viên
+        document.getElementById('addStudentForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const mssv = document.getElementById('mssv').value;
+            const name = document.getElementById('name').value;
+            const mac_address = document.getElementById('mac_address').value;
+
+            fetch('http://localhost:3000/students', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ mssv, name, mac_address }),
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Sinh viên đã được thêm');
+                        loadStudents();
+                    } else {
+                        response.text().then(alert);
+                        throw new Error('Lỗi khi thêm sinh viên');
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi thêm sinh viên:', error);
+                });
+        });
+
+        // Hàm xóa sinh viên
+        function deleteStudent(mssv) {
+            fetch(`http://localhost:3000/students/${mssv}`, {
+                method: 'DELETE',
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Sinh viên đã bị xóa');
+                        loadStudents();
+                    } else {
+                        throw new Error('Lỗi khi xóa sinh viên');
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi xóa sinh viên:', error);
+                });
+        }
+
+        let eventSource = null;  // Biến lưu trữ kết nối EventSource
+
+        // Hàm bắt đầu stream điểm danh
+        function startAttendanceStream() {
+            if (eventSource) {
+                eventSource.close();  // Đóng kết nối cũ nếu có
+            }
+
+            eventSource = new EventSource('http://localhost:3000/attendance-stream');
+            const attendanceData = document.getElementById('attendanceData');
+
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                const newRecordHtml = `
+                    <div class="attendance-record">
+                        <strong>${new Date(data.time).toLocaleTimeString("en-US", { hour12: false })}:</strong> ${data.name} (MSSV ${data.mssv})
+                    </div>
+                `;
+                attendanceData.innerHTML = newRecordHtml + attendanceData.innerHTML;
+            };
+
+            eventSource.onerror = () => {
+                console.error('Lỗi khi kết nối với server!');
+                eventSource.close();
+            };
+        }
+
+        // Hàm tắt stream điểm danh
+        function stopAttendanceStream() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                console.log('Attendance stream đã tắt');
+            }
+        }
+
+        // Hàm tải lịch sử điểm danh và hiển thị thông tin sinh viên
+        function loadAttendanceHistory() {
+            const date = document.getElementById('attendanceDate').value;
+            const today = new Date().toISOString().split('T')[0];  // Lấy ngày hôm nay theo định dạng yyyy-mm-dd
+
+            if (!date) {
+                document.getElementById('attendanceData').textContent = "Vui lòng chọn ngày!";
+                return;
+            }
+
+            if (date === today) {
+                startAttendanceStream();
+            } else {
+                stopAttendanceStream();
+            }
+
+            fetch(`http://localhost:3000/attendance-history?date=${date}`)
+                .then(response => response.json())
+                .then(data => {
+                    const attendanceData = document.getElementById('attendanceData');
+                    if (data.length === 0) {
+                        attendanceData.textContent = "Không có dữ liệu điểm danh cho ngày này.";
+                    } else {
+                        const attendancePromises = data.map(item => {
+                            return fetch(`http://localhost:3000/students/${item.mssv}`)
+                                .then(response => response.json())
+                                .then(studentInfo => {
+                                    return `
+                                        <div class="attendance-record">
+                                            <strong>${new Date(item.time).toLocaleTimeString("en-US", { hour12: false })}:</strong> ${studentInfo.name} (MSSV: ${studentInfo.mssv})
+                                        </div>
+                                    `;
+                                })
+                                .catch(() => {
+                                    return `
+                                        <div class="attendance-record">
+                                            <strong>${item.time}:</strong> Không tìm thấy thông tin sinh viên với MAC: ${item.mac_address}.
+                                        </div>
+                                    `;
+                                });
+                        });
+
+                        Promise.all(attendancePromises)
+                            .then(records => {
+                                const recordsHtml = records.join('');
+                                attendanceData.innerHTML = recordsHtml;
+                            });
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải lịch sử điểm danh:', error);
+                    document.getElementById('attendanceData').textContent = "Lỗi khi tải dữ liệu!";
+                });
+        }
+
+        let accessEventSource = null;  // Biến lưu trữ kết nối EventSource
+
+        // Hàm bắt đầu stream điểm danh
+        function startAccessStream() {
+            if (accessEventSource) {
+                accessEventSource.close();  // Đóng kết nối cũ nếu có
+            }
+
+            accessEventSource = new EventSource('http://localhost:3000/access-stream');
+            const accesssData = document.getElementById('accessData');
+
+            accessEventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                const newRecordHtml = `
+                    <div class="access-record">
+                        <strong>${new Date(data.time).toLocaleTimeString("en-US", { hour12: false })}:</strong> ${data.mac_address} (MSSV ${data.mssv})
+                    </div>
+                `;
+                accesssData.innerHTML = newRecordHtml + accesssData.innerHTML;
+            };
+
+            accessEventSource.onerror = () => {
+                console.error('Lỗi khi kết nối với server!');
+                accessEventSource.close();
+            };
+        }
+
+        // Hàm tắt stream điểm danh
+        function stopAccessStream() {
+            if (accessEventSource) {
+                accessEventSource.close();
+                accessEventSource = null;
+                console.log('Attendance stream đã tắt');
+            }
+        }
+
+        // Hàm tải lịch sử điểm danh và hiển thị thông tin sinh viên
+        function loadAccessHistory() {
+            const date = document.getElementById('accessDate').value;
+            const today = new Date().toISOString().split('T')[0];  // Lấy ngày hôm nay theo định dạng yyyy-mm-dd
+
+            if (!date) {
+                document.getElementById('accessData').textContent = "Vui lòng chọn ngày!";
+                return;
+            }
+
+            if (date === today) {
+                startAccessStream();
+            } else {
+                stopAccessStream();
+            }
+
+            fetch(`http://localhost:3000/access-history?date=${date}`)
+                .then(response => response.json())
+                .then(data => {
+
+                    const accessData = document.getElementById('accessData');
+                    if (data.length === 0) {
+                        accessData.textContent = "Không có dữ liệu điểm danh cho ngày này.";
+                    } else {
+                        records = data.map(item => {
+                            return `
+                                        <div class="attendance-record">
+                                            <strong>${new Date(item.time).toLocaleTimeString("en-US", { hour12: false })}:</strong> ${item.mac_address} (MSSV: ${item.mssv})
+                                        </div>
+                                    `;
+                        })
+
+                        const recordsHtml = records.join('');
+                        accessData.innerHTML = recordsHtml;
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải lịch sử điểm danh:', error);
+                    document.getElementById('attendanceData').textContent = "Lỗi khi tải dữ liệu!";
+                });
+        }
+
+        document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('accessDate').value = new Date().toISOString().split('T')[0];
+
+        // Tải dữ liệu khi trang được tải
+        loadStudents();
+    </script>
+</body>
+
+</html>
