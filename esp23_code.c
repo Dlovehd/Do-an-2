@@ -290,10 +290,11 @@ void handleSaveData(AsyncWebServerRequest *request)
     // config_wifi();
     WiFi.begin(ssid, password);
     unsigned long startTime = millis(); // Khởi tạo biến startTime
-    while (WiFi.status() != WL_CONNECTED && millis() - startTime < 10000)
+    while (WiFi.status() != WL_CONNECTED && millis() - startTime < 4900)
     {
         delay(1000);
         Serial.print(".");
+        yield(); // Gọi yield() để tránh hệ thống bị treo
     }
 
     if (WiFi.status() != WL_CONNECTED)
@@ -310,7 +311,7 @@ void handleSaveData(AsyncWebServerRequest *request)
         digitalWrite(redPin, LOW);   // Sáng đỏ
         digitalWrite(greenPin, LOW); // Tắt xanh lá
         digitalWrite(bluePin, HIGH);
-        delay(2000);
+        delay(1000);
         digitalWrite(redPin, LOW);   // Tắt đỏ
         digitalWrite(greenPin, LOW); // Sáng xanh lá
         digitalWrite(bluePin, LOW);
@@ -350,13 +351,20 @@ void config_wifi()
     Serial.println(ssid);
     Serial.println(password);
 
-    WiFi.begin(ssid, password);
+    WiFi.begin(ssid, password); // Bắt đầu kết nối Wi-Fi
 
     unsigned long startTime = millis(); // Khởi tạo biến startTime
-    while (WiFi.status() != WL_CONNECTED && millis() - startTime < 10000)
+    while (WiFi.status() != WL_CONNECTED)
     {
-        delay(1000);
-        Serial.print(".");
+
+        unsigned long elapsedTime = millis() - startTime;
+        if (elapsedTime >= 4900)
+        { // Nếu kết nối quá 10 giây
+            break;
+        }
+        delay(1000);       // Chờ nửa giây
+        Serial.print("."); // In ra dấu chấm khi đang kết nối
+        yield();           // Gọi yield() để tránh hệ thống bị treo
     }
 
     if (WiFi.status() != WL_CONNECTED)
@@ -370,12 +378,12 @@ void config_wifi()
     else
     {
         Serial.println("Kết nối Wi-Fi thành công");
-        digitalWrite(redPin, LOW);   // Sáng đỏ
-        digitalWrite(greenPin, LOW); // Tắt xanh lá
-        digitalWrite(bluePin, HIGH);
-        delay(2000);
-        digitalWrite(redPin, LOW);   // Tắt đỏ
-        digitalWrite(greenPin, LOW); // Sáng xanh lá
-        digitalWrite(bluePin, LOW);
+        digitalWrite(redPin, LOW);   // Tắt đèn đỏ
+        digitalWrite(greenPin, LOW); // Tắt đèn xanh lá
+        digitalWrite(bluePin, HIGH); // Bật đèn xanh dương
+        delay(1000);
+        digitalWrite(redPin, LOW);   // Tắt đèn đỏ
+        digitalWrite(greenPin, LOW); // Tắt đèn xanh lá
+        digitalWrite(bluePin, LOW);  // Tắt đèn xanh dương
     }
 }
