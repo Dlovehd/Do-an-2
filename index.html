@@ -188,23 +188,45 @@
                     section.classList.remove('hidden');
                     button.classList.add('active');  // Chuyển nút sang màu đỏ
                     button.classList.remove('default');  // Xóa màu xanh mặc định
-                    if (sectionId === "attendanceSection") {
 
+                    if (sectionId === "attendanceSection" && document.getElementById("accessSection").classList.contains('hidden')) {
                         loadAttendanceHistory();
                     }
-                    if (sectionId === "accessSection") {
-
+                    // Nếu là section access thì load lịch sử truy cập (chỉ khi attendanceSection ẩn)
+                    else if (sectionId === "accessSection" && document.getElementById("attendanceSection").classList.contains('hidden')) {
+                        const accessSection = document.getElementById("accessSection");
+                        accessSection.style.position = "static";  // Đặt position thành static (mặc định)
+                        accessSection.style.display = "block";   // Đặt display là block
                         loadAccessHistory();
                     }
+                    else if (document.getElementById("attendanceSection").classList.contains('hidden') === false &&
+                        document.getElementById("accessSection").classList.contains('hidden') === false) {
 
+                        const attendancePosition = document.getElementById("attendanceSection").getBoundingClientRect();
+                        const accessSection = document.getElementById("accessSection");
 
+                        // Đặt bảng accessSection ở vị trí absolute
+                        accessSection.style.position = "absolute";
+                        accessSection.style.top = `${attendancePosition.top - 20}px`;  // Đặt top
+                        accessSection.style.left = `${attendancePosition.left + 500}px`; // Đặt left
+
+                        loadAttendanceHistory();
+                        loadAccessHistory();
+
+                        console.log(attendancePosition.top);
+                        console.log(accessSection.style.top);
+                        console.log("Cả hai bảng đều đang hiển thị.");
+
+                        // Nếu bảng attendanceSection bị ẩn thì làm bảng accessSection trở lại chế độ block-level
+
+                    }
                 } else {
                     section.classList.add('hidden');
                     button.classList.remove('active');  // Chuyển nút về màu xanh
                     button.classList.add('default');  // Thêm màu xanh mặc định
                 }
-
             }
+
 
 
             // Hàm tải danh sách sinh viên
