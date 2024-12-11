@@ -111,7 +111,7 @@ app.get('/students/:mssv', (req, res) => {
     if (results.length === 0) {
       return res.status(404).send('Học sinh không tồn tại');
     }
-    res.send(200, results[0]);
+    res.status(200).send(results[0]);
   });
 
 });
