@@ -201,7 +201,9 @@ app.post('/check-mac', (req, res) => {
     });
 
     // Trả về thông tin sinh viên nếu MAC tồn tại
-    res.json(results[0]);
+    const mssv_return = results[0].mssv;
+    res.json({ mssv });
+
   });
 });
 
